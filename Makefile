@@ -13,10 +13,10 @@ $(GIT_HOOKS):
 	@scripts/install-git-hooks
 	@echo
 
-run:
-	./naive_transpose
-	./sse_transpose
-	./sse_prefetch_transpose
+run_%:
+	perf stat --repeat 100 \
+ 		-e cache-misses,cache-references,instructions,cycles \
+  	./$(addsuffix _transpose,$(subst run_,,$@))
 
 clean:
 	$(RM) $(EXEC)
