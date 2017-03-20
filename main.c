@@ -5,7 +5,7 @@
 #include <string.h>
 #include <assert.h>
 
-#include <xmmintrin.h>
+#include <immintrin.h>
 
 #define TEST_W 4096
 #define TEST_H 4096
@@ -60,14 +60,19 @@ int main()
     {
         struct timespec start, end;
         int *src  = (int *) malloc(sizeof(int) * TEST_W * TEST_H);
+        int *test_avx_in  = (int *) malloc(sizeof(int) * 8 * 8);
+        int *test_avx_out1  = (int *) malloc(sizeof(int) * 8 * 8);
+        int *test_avx_out2  = (int *) malloc(sizeof(int) * 8 * 8);
         int *out0 = (int *) malloc(sizeof(int) * TEST_W * TEST_H);
         int *out1 = (int *) malloc(sizeof(int) * TEST_W * TEST_H);
         int *out2 = (int *) malloc(sizeof(int) * TEST_W * TEST_H);
+        int *out3 = (int *) malloc(sizeof(int) * TEST_W * TEST_H);
 
         srand(time(NULL));
         for (int y = 0; y < TEST_H; y++)
             for (int x = 0; x < TEST_W; x++)
                 *(src + y * TEST_W + x) = rand();
+
 #if defined(sse_prefetch)
         clock_gettime(CLOCK_REALTIME, &start);
         sse_prefetch_transpose(src, out0, TEST_W, TEST_H);
@@ -89,10 +94,21 @@ int main()
         printf("naive: \t\t %ld us\n", diff_in_us(start, end));
 #endif
 
+#if defined(avx)
+        clock_gettime(CLOCK_REALTIME, &start);
+        avx_transpose(src, out3, TEST_W, TEST_H);
+        clock_gettime(CLOCK_REALTIME, &end);
+        printf("avx: \t\t %ld us\n", diff_in_us(start, end));
+#endif
+
         free(src);
         free(out0);
         free(out1);
         free(out2);
+        free(out3);
+        free(test_avx_in);
+        free(test_avx_out1);
+        free(test_avx_out2);
     }
 
     return 0;
